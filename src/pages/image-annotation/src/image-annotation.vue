@@ -2,11 +2,11 @@
 import { useImageAnnotation } from './useImageAnnotation'
 
 const props = defineProps<{
-  url: string
+  src: string
 }>()
 
 const canvasRef = ref()
-const url = props.url
+const url = props.src
 const currentType = useImageAnnotation(url, canvasRef)
 </script>
 
