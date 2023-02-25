@@ -1,0 +1,13 @@
+{
+  "name": "image-annotation",
+  "type": "module",
+  "files": ["dist"],
+  "main": "./dist/image-annotation.umd.cjs",
+  "module": "./dist/image-annotation.js",
+  "exports": {
+    ".": {
+      "import": "./dist/image-annotation.js",
+      "require": "./dist/image-annotation.js"
+    }
+  }
+}

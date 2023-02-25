@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import ImageAnnotation from './src/image-annotation.vue'
+import ImageAnnotation from '~/components/image-annotation/src/image-annotation.vue'
+// import { ImageAnnotation } from '../../dist/image-annotation'
 </script>
 
 <template>
