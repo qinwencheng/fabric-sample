@@ -17,8 +17,7 @@ const loadImageByUrl = (url: string): Promise<{ instance: HTMLImageElement; widt
   })
 }
 
-const defaultImageUrl = 'https://fuss10.elemecdn.com/a/3f/3302e58f9a181d2509f3dc0fa68b0jpeg.jpeg'
-export const useImageAnnotation = (imageUrl: string = defaultImageUrl, canvasRef: Ref<HTMLCanvasElement>) => {
+export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasElement>) => {
   let canvas: fabric.Canvas | null = null
 
   const initCanvas = async () => {

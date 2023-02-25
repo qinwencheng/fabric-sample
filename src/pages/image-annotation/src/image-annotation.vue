@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { useImageAnnotation } from './useImageAnnotation'
+
+const props = defineProps<{
+  url: string
+}>()
+
 const canvasRef = ref()
-const url = 'https://fuss10.elemecdn.com/a/3f/3302e58f9a181d2509f3dc0fa68b0jpeg.jpeg'
+const url = props.url
 const currentType = useImageAnnotation(url, canvasRef)
 </script>
 
