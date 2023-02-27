@@ -1,4 +1,4 @@
 import ImageAnnotation from './src/image-annotation.vue'
-import 'uno.css'
+import type { OperationType } from './src/useImageAnnotation'
 
-export { ImageAnnotation }
+export { ImageAnnotation, OperationType }

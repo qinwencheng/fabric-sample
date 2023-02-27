@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useImageAnnotation } from './useImageAnnotation'
+import type { OperationType } from './useImageAnnotation'
 
 const props = defineProps<{
   src: string
@@ -8,20 +9,16 @@ const props = defineProps<{
 const canvasRef = ref()
 const url = props.src
 const currentType = useImageAnnotation(url, canvasRef)
+
+defineExpose({
+  currentType,
+  setCurrentType: (val: OperationType) => currentType.value = val,
+})
 </script>
 
 <template>
   <div>
     <!-- <img ref="imageRef" :src="imageUrl" class="hidden"> -->
     <canvas id="c" ref="canvasRef" width="500" height="500" style="border: 1px solid #ccc;" />
-    <div class="toolList">
-      <button :disabled="currentType === 'rect'" class="m-3 text-sm btn" @click="() => currentType = 'rect'">
-        rect
-      </button>
-      <button :disabled="currentType === 'default'" class="m-3 text-sm btn" @click="() => currentType = 'default'">
-        select
-      </button>
-    </div>
-    {{ currentType }}
   </div>
 </template>

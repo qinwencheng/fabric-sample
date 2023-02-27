@@ -17,6 +17,8 @@ const loadImageByUrl = (url: string): Promise<{ instance: HTMLImageElement; widt
   })
 }
 
+export type OperationType = 'default' | 'rect'
+
 export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasElement>) => {
   let canvas: fabric.Canvas | null = null
 
@@ -62,7 +64,6 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
 
   let downPoint: fabric.Point | null = null // 按下鼠标时的坐标
   let upPoint: fabric.Point | null = null // 松开鼠标时的坐标
-  type OperationType = 'default' | 'rect'
   const currentType = ref<OperationType>('default') // 当前操作模式（默认 || 创建矩形）
   watch(currentType, (opt) => {
     switch (opt) {
