@@ -58,6 +58,25 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     })
   }
 
+  const rotateCanvas = (degrees: number) => {
+    if (canvas === null)
+      return
+
+    const canvasCenter = new fabric.Point(canvas.getWidth() / 2, canvas.getHeight() / 2) // center of canvas
+    const radians = fabric.util.degreesToRadians(degrees)
+
+    canvas.getObjects().forEach((obj) => {
+      const objectOrigin = new fabric.Point(obj.left, obj.top)
+      const new_loc = fabric.util.rotatePoint(objectOrigin, canvasCenter, radians)
+      obj.top = new_loc.y
+      obj.left = new_loc.x
+      obj.angle += degrees // rotate each object buy the same angle
+      obj.setCoords()
+    })
+
+    canvas.renderAll()
+  }
+
   onMounted(() => {
     initCanvas()
   })
@@ -140,5 +159,5 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     }
   }
 
-  return currentType
+  return { currentType, rotateCanvas }
 }
