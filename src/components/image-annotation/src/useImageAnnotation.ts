@@ -21,11 +21,12 @@ export type OperationType = 'default' | 'rect'
 
 export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasElement>) => {
   let canvas: fabric.Canvas | null = null
+  let fabricImage: fabric.Image | null = null
 
   const initCanvas = async () => {
     canvas = new fabric.Canvas(canvasRef.value!, {})
     const { instance, width, height } = await loadImageByUrl(imageUrl)
-    const fabricImage = new fabric.Image(instance, {
+    fabricImage = new fabric.Image(instance, {
       width,
       height,
     })
@@ -59,18 +60,34 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
   }
 
   const rotateCanvas = (degrees: number) => {
-    if (canvas === null)
+    if (canvas === null || fabricImage == null)
       return
 
-    const canvasCenter = new fabric.Point(canvas.getWidth() / 2, canvas.getHeight() / 2) // center of canvas
+    // 找到旋转的中心点，这里以图片作为中心点
+    const { x, y } = fabricImage.getCenterPoint()
+    const imageCenter = new fabric.Point(x, y) // center of image
+    // const canvasCenter = new fabric.Point(canvas.getWidth() / 2, canvas.getHeight() / 2) // center of canvas
+
+    // 将角度转换为弧度
     const radians = fabric.util.degreesToRadians(degrees)
 
+    // 遍历每个对象让他们都旋转 degrees 度
     canvas.getObjects().forEach((obj) => {
-      const objectOrigin = new fabric.Point(obj.left, obj.top)
-      const new_loc = fabric.util.rotatePoint(objectOrigin, canvasCenter, radians)
-      obj.top = new_loc.y
-      obj.left = new_loc.x
-      obj.angle += degrees // rotate each object buy the same angle
+      // 跳过没有angle的obj
+      if (obj.angle === undefined)
+        return
+
+      // 元素左上角的点
+      const objectOriginPoint = new fabric.Point(obj.left ?? 0, obj.top ?? 0)
+
+      // 把左上角的点绕着图片中心点旋转指定度数后得到的新点
+      const rotatedPoint = fabric.util.rotatePoint(objectOriginPoint, imageCenter, radians)
+
+      obj.top = rotatedPoint.y
+      obj.left = rotatedPoint.x
+      obj.angle += degrees
+
+      // 重新计算obj的坐标
       obj.setCoords()
     })
 
