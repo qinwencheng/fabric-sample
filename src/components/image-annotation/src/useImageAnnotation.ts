@@ -63,6 +63,9 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     if (canvas === null || fabricImage == null)
       return
 
+    // 阻止多激活状态下的旋转会导致中心点偏移的bug
+    canvas?.setActiveObject(fabricImage)
+
     // 找到旋转的中心点，这里以图片作为中心点
     const { x, y } = fabricImage.getCenterPoint()
     const imageCenter = new fabric.Point(x, y) // center of image
