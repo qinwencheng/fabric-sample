@@ -23,84 +23,6 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
   let canvas: fabric.Canvas | null = null
   let fabricImage: fabric.Image | null = null
 
-  const initCanvas = async () => {
-    canvas = new fabric.Canvas(canvasRef.value!, {})
-    const { instance, width, height } = await loadImageByUrl(imageUrl)
-    fabricImage = new fabric.Image(instance, {
-      width,
-      height,
-    })
-
-    // 画布宽高设置为全屏
-    canvas.setWidth(window.innerWidth)
-    canvas.setHeight(window.innerHeight)
-
-    canvas.add(fabricImage)
-    // 初始时图片相对画布垂直居中
-    canvas.centerObjectH(fabricImage)
-    canvas.centerObjectV(fabricImage)
-
-    // 在图片上新建图形时使得新图形在图片的上层
-    canvas.preserveObjectStacking = true
-    canvas.on('mouse:down', canvasMouseDown) // 鼠标在画布上按下
-    canvas.on('mouse:up', canvasMouseUp) // 鼠标在画布上松开
-    canvas.on('mouse:wheel', (opt) => {
-      const delta = opt.e.deltaY
-      let zoom = canvas.getZoom()
-      zoom *= 0.999 ** delta
-      if (zoom > 20)
-        zoom = 20
-      if (zoom < 0.01)
-        zoom = 0.01
-      // canvas.setZoom(zoom)
-      canvas?.zoomToPoint(new fabric.Point(canvas.width / 2, canvas.height / 2), zoom)
-      opt.e.preventDefault()
-      opt.e.stopPropagation()
-    })
-  }
-
-  const rotateCanvas = (degrees: number) => {
-    if (canvas === null || fabricImage == null)
-      return
-
-    // 阻止多激活状态下的旋转会导致中心点偏移的bug
-    canvas?.setActiveObject(fabricImage)
-
-    // 找到旋转的中心点，这里以图片作为中心点
-    const { x, y } = fabricImage.getCenterPoint()
-    const imageCenter = new fabric.Point(x, y) // center of image
-    // const canvasCenter = new fabric.Point(canvas.getWidth() / 2, canvas.getHeight() / 2) // center of canvas
-
-    // 将角度转换为弧度
-    const radians = fabric.util.degreesToRadians(degrees)
-
-    // 遍历每个对象让他们都旋转 degrees 度
-    canvas.getObjects().forEach((obj) => {
-      // 跳过没有angle的obj
-      if (obj.angle === undefined)
-        return
-
-      // 元素左上角的点
-      const objectOriginPoint = new fabric.Point(obj.left ?? 0, obj.top ?? 0)
-
-      // 把左上角的点绕着图片中心点旋转指定度数后得到的新点
-      const rotatedPoint = fabric.util.rotatePoint(objectOriginPoint, imageCenter, radians)
-
-      obj.top = rotatedPoint.y
-      obj.left = rotatedPoint.x
-      obj.angle += degrees
-
-      // 重新计算obj的坐标
-      obj.setCoords()
-    })
-
-    canvas.renderAll()
-  }
-
-  onMounted(() => {
-    initCanvas()
-  })
-
   let downPoint: fabric.Point | null = null // 按下鼠标时的坐标
   let upPoint: fabric.Point | null = null // 松开鼠标时的坐标
   const currentType = ref<OperationType>('default') // 当前操作模式（默认 || 创建矩形）
@@ -178,6 +100,86 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
       currentType.value = 'default'
     }
   }
+
+  const canvasMouseWheel = (opt: fabric.IEvent<WheelEvent>) => {
+    const delta = opt.e.deltaY
+    let zoom = canvas.getZoom()
+    zoom *= 0.999 ** delta
+    if (zoom > 20)
+      zoom = 20
+    if (zoom < 0.01)
+      zoom = 0.01
+    // canvas.setZoom(zoom)
+    canvas?.zoomToPoint(new fabric.Point(canvas.width / 2, canvas.height / 2), zoom)
+    opt.e.preventDefault()
+    opt.e.stopPropagation()
+  }
+
+  const initCanvas = async () => {
+    canvas = new fabric.Canvas(canvasRef.value!, {})
+    const { instance, width, height } = await loadImageByUrl(imageUrl)
+    fabricImage = new fabric.Image(instance, {
+      width,
+      height,
+    })
+
+    // 画布宽高设置为全屏
+    canvas.setWidth(window.innerWidth)
+    canvas.setHeight(window.innerHeight)
+
+    canvas.add(fabricImage)
+    // 初始时图片相对画布垂直居中
+    canvas.centerObjectH(fabricImage)
+    canvas.centerObjectV(fabricImage)
+
+    // 在图片上新建图形时使得新图形在图片的上层
+    canvas.preserveObjectStacking = true
+    canvas.on('mouse:down', canvasMouseDown) // 鼠标在画布上按下
+    canvas.on('mouse:up', canvasMouseUp) // 鼠标在画布上松开
+    canvas.on('mouse:wheel', canvasMouseWheel)
+  }
+
+  const rotateCanvas = (degrees: number) => {
+    if (canvas === null || fabricImage == null)
+      return
+
+    // 阻止多激活状态下的旋转会导致中心点偏移的bug
+    canvas?.setActiveObject(fabricImage)
+
+    // 找到旋转的中心点，这里以图片作为中心点
+    const { x, y } = fabricImage.getCenterPoint()
+    const imageCenter = new fabric.Point(x, y) // center of image
+    // const canvasCenter = new fabric.Point(canvas.getWidth() / 2, canvas.getHeight() / 2) // center of canvas
+
+    // 将角度转换为弧度
+    const radians = fabric.util.degreesToRadians(degrees)
+
+    // 遍历每个对象让他们都旋转 degrees 度
+    canvas.getObjects().forEach((obj) => {
+      // 跳过没有angle的obj
+      if (obj.angle === undefined)
+        return
+
+      // 元素左上角的点
+      const objectOriginPoint = new fabric.Point(obj.left ?? 0, obj.top ?? 0)
+
+      // 把左上角的点绕着图片中心点旋转指定度数后得到的新点
+      const rotatedPoint = fabric.util.rotatePoint(objectOriginPoint, imageCenter, radians)
+
+      obj.top = rotatedPoint.y
+      obj.left = rotatedPoint.x
+      obj.angle += degrees
+
+      // 重新计算obj的坐标
+      obj.setCoords()
+    })
+
+    canvas.renderAll()
+  }
+
+  onMounted(() => {
+    initCanvas()
+  })
 
   return { currentType, rotateCanvas }
 }
