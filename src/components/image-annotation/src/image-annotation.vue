@@ -8,12 +8,13 @@ const props = defineProps<{
 
 const canvasRef = ref<HTMLCanvasElement>()
 const url = props.src
-const { currentType, rotateCanvas } = useImageAnnotation(url, canvasRef)
+const { currentType, rotateCanvas, zoomCanvas } = useImageAnnotation(url, canvasRef)
 
 defineExpose({
   currentType,
   setCurrentType: (val: OperationType) => currentType.value = val,
   rotateCanvas,
+  zoomCanvas,
 })
 </script>
 

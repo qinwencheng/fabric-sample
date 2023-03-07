@@ -25,6 +25,7 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
 
   let downPoint: fabric.Point | null = null // 按下鼠标时的坐标
   let upPoint: fabric.Point | null = null // 松开鼠标时的坐标
+
   const currentType = ref<OperationType>('default') // 当前操作模式（默认 || 创建矩形）
   watch(currentType, (opt) => {
     switch (opt) {
@@ -101,16 +102,25 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     }
   }
 
-  const canvasMouseWheel = (opt: fabric.IEvent<WheelEvent>) => {
-    const delta = opt.e.deltaY
+  const zoomCanvas = (zoomRate: number) => {
+    if (canvas === null)
+      return
+
+    console.log('zoomRate', zoomRate)
+
     let zoom = canvas.getZoom()
-    zoom *= 0.999 ** delta
+    zoom *= 0.999 ** zoomRate
     if (zoom > 20)
       zoom = 20
     if (zoom < 0.01)
       zoom = 0.01
-    // canvas.setZoom(zoom)
+
     canvas?.zoomToPoint(new fabric.Point(canvas.width / 2, canvas.height / 2), zoom)
+  }
+
+  const canvasMouseWheel = (opt: fabric.IEvent<WheelEvent>) => {
+    const delta = opt.e.deltaY
+    zoomCanvas(delta)
     opt.e.preventDefault()
     opt.e.stopPropagation()
   }
@@ -181,5 +191,5 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     initCanvas()
   })
 
-  return { currentType, rotateCanvas }
+  return { currentType, rotateCanvas, zoomCanvas }
 }
