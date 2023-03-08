@@ -10,6 +10,9 @@ const setCurrentType = (val: OperationType) => {
 const rotateCanvas = (degree: number) => {
   imageAnnotationRef.value?.rotateCanvas(degree)
 }
+const zoomCanvas = (scale: number) => {
+  imageAnnotationRef.value?.zoomCanvas(scale)
+}
 </script>
 
 <template>
@@ -26,6 +29,12 @@ const rotateCanvas = (degree: number) => {
       </button>
       <button class="m-3 text-sm btn" @click="rotateCanvas(90)">
         =>
+      </button>
+      <button class="m-3 text-sm btn" @click="zoomCanvas(-120)">
+        +
+      </button>
+      <button class="m-3 text-sm btn" @click="zoomCanvas(120)">
+        -
       </button>
       <br>
       当前状态: {{ currentType }}
