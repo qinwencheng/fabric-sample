@@ -1,4 +1,5 @@
 import { fabric } from 'fabric'
+import type { Ref } from 'vue'
 
 const loadImageByUrl = (url: string): Promise<{ instance: HTMLImageElement; width: number; height: number }> => {
   return new Promise((resolve, reject) => {
@@ -19,7 +20,7 @@ const loadImageByUrl = (url: string): Promise<{ instance: HTMLImageElement; widt
 
 export type OperationType = 'default' | 'rect'
 
-export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasElement>) => {
+export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasElement | null>) => {
   let canvas: fabric.Canvas | null = null
   let fabricImage: fabric.Image | null = null
 
@@ -42,11 +43,13 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
   // 创建矩形
   function createRect() {
     // 如果点击和松开鼠标，都是在同一个坐标点，不会生成矩形
-    if (JSON.stringify(downPoint) === JSON.stringify(upPoint))
+    const isSamePoint = (JSON.stringify(downPoint) === JSON.stringify(upPoint))
+    // 如果起点或终点不合法，不会生成矩形
+    if (isSamePoint || !downPoint || !upPoint)
       return
 
     // 创建矩形
-    // 矩形参数计算（前面总结的4条公式）
+    // 计算矩形的 top、left、width、height 覆盖不同画法
     const top = Math.min(downPoint.y, upPoint.y)
     const left = Math.min(downPoint.x, upPoint.x)
     const width = Math.abs(downPoint.x - upPoint.x)
@@ -81,7 +84,7 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     const isRightPoint = ((e.target === null) || (e.target!.type === 'image'))
     if (isRightPoint && currentType.value === 'rect') {
       // 按下鼠标左键时，将当前坐标 赋值给 downPoint
-      downPoint = e.absolutePointer
+      downPoint = e.absolutePointer ?? null
     }
     else {
       downPoint = null
@@ -92,7 +95,7 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     // 需要额外判断起点是否成功赋值
     if (currentType.value === 'rect' && downPoint) {
       // 松开鼠标左键时，将当前坐标 赋值给 upPoint
-      upPoint = e.absolutePointer
+      upPoint = e.absolutePointer ?? null
 
       // 调用 创建矩形 的方法
       createRect()
@@ -106,8 +109,6 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     if (canvas === null)
       return
 
-    console.log('zoomRate', zoomRate)
-
     let zoom = canvas.getZoom()
     zoom *= 0.999 ** zoomRate
     if (zoom > 20)
@@ -115,7 +116,7 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     if (zoom < 0.01)
       zoom = 0.01
 
-    canvas?.zoomToPoint(new fabric.Point(canvas.width / 2, canvas.height / 2), zoom)
+    canvas?.zoomToPoint(new fabric.Point(canvas.width! / 2, canvas.height! / 2), zoom)
   }
 
   const canvasMouseWheel = (opt: fabric.IEvent<WheelEvent>) => {
@@ -126,16 +127,19 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
   }
 
   const initCanvas = async () => {
-    canvas = new fabric.Canvas(canvasRef.value!, {})
+    if (canvasRef.value === null)
+      throw new Error('canvasRef is null')
+
+    canvas = new fabric.Canvas(canvasRef.value, {})
     const { instance, width, height } = await loadImageByUrl(imageUrl)
     fabricImage = new fabric.Image(instance, {
       width,
       height,
     })
 
-    // 画布宽高设置为全屏
-    canvas.setWidth(window.innerWidth)
-    canvas.setHeight(window.innerHeight)
+    // 设置画布宽高为全屏
+    canvas.setWidth(window.innerWidth ?? 500)
+    canvas.setHeight(window.innerHeight ?? 500)
 
     canvas.add(fabricImage)
     // 初始时图片相对画布垂直居中
@@ -146,7 +150,7 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     canvas.preserveObjectStacking = true
     canvas.on('mouse:down', canvasMouseDown) // 鼠标在画布上按下
     canvas.on('mouse:up', canvasMouseUp) // 鼠标在画布上松开
-    canvas.on('mouse:wheel', canvasMouseWheel)
+    canvas.on('mouse:wheel', canvasMouseWheel) // 鼠标滚轮事件
   }
 
   const rotateCanvas = (degrees: number) => {
@@ -158,9 +162,8 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
 
     // 找到旋转的中心点，这里以图片作为中心点
     const { x, y } = fabricImage.getCenterPoint()
-    const imageCenter = new fabric.Point(x, y) // center of image
-    // const canvasCenter = new fabric.Point(canvas.getWidth() / 2, canvas.getHeight() / 2) // center of canvas
-
+    // 旋转中心点
+    const imageCenter = new fabric.Point(x, y)
     // 将角度转换为弧度
     const radians = fabric.util.degreesToRadians(degrees)
 
