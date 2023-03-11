@@ -6,7 +6,7 @@ const props = defineProps<{
   src: string
 }>()
 
-const canvasRef = ref<HTMLCanvasElement>()
+const canvasRef = ref<HTMLCanvasElement | null>(null)
 const url = props.src
 const { currentType, rotateCanvas, zoomCanvas } = useImageAnnotation(url, canvasRef)
 
