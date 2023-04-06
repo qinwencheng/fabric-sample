@@ -13,6 +13,9 @@ const rotateCanvas = (degree: number) => {
 const zoomCanvas = (scale: number) => {
   imageAnnotationRef.value?.zoomCanvas(scale)
 }
+const resetOperation = () => {
+  imageAnnotationRef.value?.resetOperation()
+}
 </script>
 
 <template>
@@ -35,6 +38,9 @@ const zoomCanvas = (scale: number) => {
       </button>
       <button class="m-3 text-sm btn" @click="zoomCanvas(120)">
         -
+      </button>
+      <button class="m-3 text-sm btn" @click="resetOperation()">
+        reset
       </button>
       <br>
       当前状态: {{ currentType }}

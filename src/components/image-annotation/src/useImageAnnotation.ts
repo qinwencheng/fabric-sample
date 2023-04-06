@@ -109,6 +109,9 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     if (canvas === null)
       return
 
+    if (zoomRate === 0)
+      canvas?.zoomToPoint(new fabric.Point(canvas.width! / 2, canvas.height! / 2), 1)
+
     let zoom = canvas.getZoom()
     zoom *= 0.999 ** zoomRate
     if (zoom > 20)
@@ -153,9 +156,25 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     canvas.on('mouse:wheel', canvasMouseWheel) // 鼠标滚轮事件
   }
 
+  // 累计旋转的角度
+  let totalRotate = 0
+
   const rotateCanvas = (degrees: number) => {
     if (canvas === null || fabricImage == null)
       return
+
+    totalRotate += degrees
+    console.log('totalRotate', totalRotate)
+    if (totalRotate >= 360)
+      totalRotate -= 360
+
+    if (totalRotate <= -360)
+      totalRotate += 360
+
+    console.log('totalRotate', totalRotate)
+
+    if (degrees === 0)
+      degrees = -1 * totalRotate
 
     // 阻止多激活状态下的旋转会导致中心点偏移的bug
     canvas?.setActiveObject(fabricImage)
@@ -190,9 +209,15 @@ export const useImageAnnotation = (imageUrl: string, canvasRef: Ref<HTMLCanvasEl
     canvas.renderAll()
   }
 
+  const resetOperation = () => {
+    zoomCanvas(0)
+    rotateCanvas(0)
+    totalRotate = 0
+  }
+
   onMounted(() => {
     initCanvas()
   })
 
-  return { currentType, rotateCanvas, zoomCanvas }
+  return { currentType, rotateCanvas, zoomCanvas, resetOperation }
 }
